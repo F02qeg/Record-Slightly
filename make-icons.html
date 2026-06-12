@@ -1,18 +1,236 @@
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>生成图标</title></head>
-<body style="background:#5D9CEC;display:flex;gap:20px;padding:40px">
-<canvas id="c192" width="192" height="192"></canvas>
-<canvas id="c512" width="512" height="512"></canvas>
-<script>
-[['c192',192],['c512',512]].forEach(([id,s])=>{
-  const c=document.getElementById(id),ctx=c.getContext('2d');
-  c.width=s;c.height=s;
-  ctx.fillStyle='#5D9CEC';ctx.beginPath();ctx.roundRect?ctx.roundRect(0,0,s,s,36):ctx.rect(0,0,s,s);ctx.fill();
-  ctx.fillStyle='#fff';ctx.font=`bold ${s*.45}px system-ui,sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.fillText('轻',s/2,s/2);
-  console.log(id+' dataURL:', c.toDataURL('image/png'));
-});
-</script>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Record-Swiftly 图标生成器</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px;
+            gap: 30px;
+        }
+
+        h2 { color: #333; margin-bottom: 10px; }
+
+        .icon-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            width: fit-content;
+        }
+
+        canvas {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            display: block;
+            margin: 0 auto 15px;
+        }
+
+        .btn {
+            background: #2E5BFF;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: #1a42e0; }
+
+        .note {
+            max-width: 600px;
+            color: #666;
+            background: #fffbe6;
+            padding: 15px;
+            border: 1px solid #ffe58f;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🎨 图标生成预览</h2>
+    
+    <div class="icon-box">
+        <canvas id="c192" width="192" height="192"></canvas>
+        <button class="btn" onclick="download('c192', 192)">下载 192×192</button>
+    </div>
+
+    <div class="icon-box">
+        <canvas id="c512" width="512" height="512"></canvas>
+        <button class="btn" onclick="download('c512', 512)">下载 512×512</button>
+    </div>
+
+    <div class="note">
+        <strong>🔧 已修复：</strong>针对 192×192 尺寸优化了字体大小和位置，解决了字体重叠问题。512×512 尺寸保持不变。
+    </div>
+
+    <script>
+        // 获取 Canvas 上下文
+        const ctx192 = document.getElementById('c192').getContext('2d');
+        const ctx512 = document.getElementById('c512').getContext('2d');
+
+        // 配置参数 - 针对不同尺寸单独优化
+        const configs = {
+            192: {
+                bgStart: '#E3F2FD',
+                bgEnd: '#90CAF9',
+                mainColor: '#1565C0',
+                reflectionColor: 'rgba(0,0,0,0.25)',
+                geoColor: 'rgba(129, 199, 132, 0.3)',
+                // 192尺寸的特定调整
+                cnFontSize: 26,      // 中文更小
+                enFontSize: 16,      // 英文更小
+                cnX: 15,             // 中文更靠左
+                enX: 177,            // 英文更靠右
+                centerY: 70,         // 垂直位置更高
+                descCNSize: 10,      // 说明文字更小
+                descENSize: 8,
+                descY: 165           // 说明文字更低
+            },
+            512: {
+                bgStart: '#E3F2FD',
+                bgEnd: '#90CAF9',
+                mainColor: '#1565C0',
+                reflectionColor: 'rgba(0,0,0,0.25)',
+                geoColor: 'rgba(129, 199, 132, 0.3)',
+                // 512尺寸的调整
+                cnFontSize: 38,
+                enFontSize: 24,
+                cnX: 40,
+                enX: 472,
+                centerY: 180,
+                descCNSize: 14,
+                descENSize: 11,
+                descY: 452
+            }
+        };
+
+        // 绘制函数
+        function draw(ctx, size) {
+            const cfg = configs[size];
+            
+            // 1. 清空画布
+            ctx.clearRect(0, 0, size, size);
+
+            // 2. 绘制背景渐变
+            const grad = ctx.createLinearGradient(0, 0, 0, size);
+            grad.addColorStop(0, cfg.bgStart);
+            grad.addColorStop(1, cfg.bgEnd);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, size, size);
+
+            // 3. 绘制淡绿色几何背景
+            ctx.strokeStyle = cfg.geoColor;
+            ctx.lineWidth = size === 192 ? 1 : 2;
+            
+            if (size === 192) {
+                // 192尺寸的简化几何图形
+                ctx.beginPath();
+                ctx.moveTo(30, 40); ctx.lineTo(50, 60); ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(150, 50, 12, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(20, 120); ctx.lineTo(50, 130); ctx.stroke();
+            } else {
+                // 512尺寸的几何图形
+                ctx.beginPath();
+                ctx.moveTo(80, 100); ctx.lineTo(120, 140); ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(400, 150, 30, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(50, 300); ctx.lineTo(150, 350); ctx.stroke();
+            }
+
+            // 4. 绘制中文标题（左侧）
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.font = `bold ${cfg.cnFontSize}px "Microsoft YaHei", sans-serif`;
+            ctx.fillStyle = cfg.mainColor;
+            
+            // 立体效果
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.fillText('轻记', cfg.cnX + 1, cfg.centerY + 1);
+            ctx.fillStyle = cfg.mainColor;
+            ctx.fillText('轻记', cfg.cnX, cfg.centerY);
+
+            // 5. 绘制英文标题（右侧）
+            ctx.font = `normal ${cfg.enFontSize}px Arial, sans-serif`;
+            ctx.fillStyle = '#333';
+            ctx.textAlign = 'right';
+            ctx.fillText('Record-Swiftly', cfg.enX, cfg.centerY);
+
+            // 6. 绘制倒影 (带波纹打断效果)
+            ctx.save();
+            
+            // 创建波纹遮罩路径
+            ctx.beginPath();
+            ctx.moveTo(0, cfg.centerY + cfg.cnFontSize * 0.8);
+            // 模拟正弦波
+            for(let x=0; x<=size; x+=10) {
+                let y = (cfg.centerY + cfg.cnFontSize * 0.8) + Math.sin(x * 0.02) * (size === 192 ? 5 : 10);
+                ctx.lineTo(x, y);
+            }
+            ctx.lineTo(size, size);
+            ctx.lineTo(0, size);
+            ctx.closePath();
+            
+            ctx.clip();
+
+            // 绘制倾斜的灰色倒影
+            ctx.save();
+            ctx.translate(-10, 0);
+            ctx.rotate(-0.1);
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#444';
+            
+            // 再次绘制文字用于倒影
+            ctx.font = `bold ${cfg.cnFontSize}px "Microsoft YaHei", sans-serif`;
+            ctx.textAlign = 'left';
+            ctx.fillText('轻记', cfg.cnX, cfg.centerY);
+            
+            ctx.font = `normal ${cfg.enFontSize}px Arial, sans-serif`;
+            ctx.textAlign = 'right';
+            ctx.fillText('Record-Swiftly', cfg.enX, cfg.centerY);
+            ctx.restore();
+
+            ctx.restore();
+
+            // 7. 绘制底部说明文字
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#555';
+            ctx.font = `${cfg.descCNSize}px "Microsoft YaHei", sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('实时记录评估财产财务状况', size/2, cfg.descY);
+            
+            ctx.font = `${cfg.descENSize}px Arial, sans-serif`;
+            ctx.fillStyle = '#777';
+            ctx.fillText('In-time record your finantial property situation', size/2, cfg.descY + cfg.descCNSize * 1.5);
+        }
+
+        // 执行绘制
+        draw(ctx192, 192);
+        draw(ctx512, 512);
+
+        // 下载功能
+        function download(id, size) {
+            const canvas = document.getElementById(id);
+            const link = document.createElement('a');
+            link.download = `icon-${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
 </body>
 </html>
