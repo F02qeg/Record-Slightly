@@ -3,151 +3,307 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>资产页面</title>
-    
-    <!-- 将样式直接写在这里，确保生效 -->
+    <title>资产记账</title>
     <style>
-        :root {
-            --primary-blue: #2979ff;
-            --bg-page: #f5f7fa;
-            --border-soft: #e0e6ed;
-            --text-dark: #333;
-            --radius-md: 8px;
-            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        body {
+        /* 基础样式 */
+        * {
             margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg-page);
-            color: var(--text-dark);
-            display: flex;
-            justify-content: center;
-            padding-top: 20px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 500px;
-            padding: 0 16px;
-        }
-
-        /* 顶部资产卡片 */
-        .asset-card {
-            background: white;
-            border-radius: var(--radius-md);
-            padding: 24px;
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 20px;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "PingFang SC", "Helvetica Neue", Arial, sans-serif;
         }
         
-        /* 修复数字过长的问题 */
-        .asset-card .amount {
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding-bottom: 60px; /* 为底部导航留空间 */
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        /* 卡片样式 - 顶部总资产卡片 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+        
+        .total-assets {
             font-size: 24px;
             font-weight: bold;
-            color: #666;
+            color: #333;
             margin-bottom: 10px;
-            word-break: break-all; /* 防止数字撑破布局 */
         }
-
+        
         .asset-item {
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
             font-size: 14px;
         }
-
-        /* --- 核心修改：选项卡按钮样式 --- */
+        
+        .asset-label {
+            color: #666;
+        }
+        
+        .asset-value {
+            font-weight: 500;
+        }
+        
+        /* ===== 重点：选项卡按钮样式 ===== */
+        .tabs-container {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
         .tabs {
             display: flex;
             gap: 10px;
-            margin-bottom: 20px;
-            padding: 0 4px;
+            margin-bottom: 15px;
         }
-
-        .tab-btn {
+        
+        .tab {
             flex: 1;
             text-align: center;
-            padding: 12px 8px;
-            border: 1px solid var(--border-soft);
-            border-radius: var(--radius-md);
+            padding: 12px 5px;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            user-select: none;
+        }
+        
+        /* 为每个选项卡设置不同颜色 */
+        .tab-all {
+            background-color: #e3f2fd;
+            color: #1976d2;
+            border-color: #bbdefb;
+        }
+        
+        .tab-personal {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+            border-color: #e1bee7;
+        }
+        
+        .tab-business {
+            background-color: #e8f5e9;
+            color: #388e3c;
+            border-color: #c8e6c9;
+        }
+        
+        .tab-gift {
+            background-color: #fff3e0;
+            color: #f57c00;
+            border-color: #ffe0b2;
+        }
+        
+        /* 选中状态的样式 */
+        .tab.active {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        /* 选中时加深颜色 */
+        .tab-all.active {
+            background-color: #1976d2;
+            color: white;
+            border-color: #0d47a1;
+        }
+        
+        .tab-personal.active {
+            background-color: #7b1fa2;
+            color: white;
+            border-color: #4a148c;
+        }
+        
+        .tab-business.active {
+            background-color: #388e3c;
+            color: white;
+            border-color: #1b5e20;
+        }
+        
+        .tab-gift.active {
+            background-color: #f57c00;
+            color: white;
+            border-color: #e65100;
+        }
+        
+        /* 列表项样式 */
+        .record-list {
             background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .section-title {
             font-size: 14px;
             color: #666;
-            transition: all 0.2s;
-            font-weight: 500;
-            /* 确保这是一个块级可点击区域 */
-            display: block; 
-            border: 2px solid transparent; /* 预留边框位置 */
-        }
-
-        /* 鼠标放上去有效果 */
-        .tab-btn:hover {
-            background: #f0f4f8;
-            border-color: #ccc;
-        }
-
-        /* 选中状态的高亮样式 */
-        .tab-btn.active {
-            border-color: var(--primary-blue);
-            background: #E8F1FF;
-            color: var(--primary-blue);
-            font-weight: bold;
-        }
-
-        /* 账目列表 */
-        .list-container {
-            background: white;
-            border-radius: var(--radius-md);
-            padding: 0 16px;
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 80px; /* 给底部导航留空间 */
-            min-height: 200px; /* 防止列表为空时页面塌陷 */
-        }
-
-        .list-header {
-            padding: 16px 0;
-            font-size: 12px;
-            color: #999;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
             border-bottom: 1px solid #eee;
         }
-
+        
         .record-item {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 16px 0;
+            padding: 12px 0;
             border-bottom: 1px solid #f5f5f5;
         }
-
-        .record-info {
-            font-size: 15px;
+        
+        .record-item:last-child {
+            border-bottom: none;
         }
-
+        
+        .record-info {
+            flex: 1;
+        }
+        
         .record-amount {
             font-weight: 500;
             color: #333;
         }
-
-        /* 底部导航模拟 */
+        
+        /* 底部导航 */
         .bottom-nav {
             position: fixed;
             bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 500px;
-            height: 60px;
+            left: 0;
+            right: 0;
             background: white;
             border-top: 1px solid #eee;
+            padding: 10px 0;
             display: flex;
             justify-content: center;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .nav-item {
+            display: flex;
             align-items: center;
+            justify-content: center;
+            padding: 5px 15px;
+            font-weight: 500;
+        }
+        
+        /* 用于演示的隐藏类 */
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <!-- 顶部总资产卡片 -->
+        <div class="card">
+            <div class="total-assets">¥ 28.700000000000003</div>
+            <div class="asset-item">
+                <span class="asset-label">总资产</span>
+                <span class="asset-value">¥ 0</span>
+            </div>
+            <div class="asset-item">
+                <span class="asset-label">待报销</span>
+                <span class="asset-value">4</span>
+            </div>
+            <div class="asset-item">
+                <span class="asset-label">即将过保</span>
+                <span class="asset-value">0</span>
+            </div>
+        </div>
+        
+        <!-- ===== 重点：选项卡部分 ===== -->
+        <div class="tabs-container">
+            <div class="tabs">
+                <div class="tab tab-all active" onclick="switchTab('all', this)">全部</div>
+                <div class="tab tab-personal" onclick="switchTab('personal', this)">个人</div>
+                <div class="tab tab-business" onclick="switchTab('business', this)">商务</div>
+                <div class="tab tab-gift" onclick="switchTab('gift', this)">礼物</div>
+            </div>
+            
+            <!-- 账单记录列表 -->
+            <div class="record-list">
+                <div class="section-title">账单记录</div>
+                
+                <!-- 示例记录 - 全部显示 -->
+                <div class="record-item" data-type="all">
+                    <div class="record-info">午餐（汤+鱼+馒头+蔬菜）</div>
+                    <div class="record-amount">¥11.30</div>
+                </div>
+                
+                <div class="record-item" data-type="personal">
+                    <div class="record-info">打印</div>
+                    <div class="record-amount">¥0.40</div>
+                </div>
+                
+                <div class="record-item" data-type="business">
+                    <div class="record-info">晚餐（鸭脖+菜煎饼）</div>
+                    <div class="record-极速赛车开奖直播官网">¥12.00</div>
+                </div>
+                
+                <div class="record-item" data-type="personal">
+                    <div class="record-info">蟠桃</div>
+                    <div class="record-amount">¥5.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <div class="nav-item">💰 资产</div>
+    </div>
+
+    <script>
+        // 切换选项卡的函数
+        function switchTab(tabType, element) {
+            // 1. 移除所有选项卡的 active 类
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // 2. 给当前点击的选项卡添加 active 类
+            element.classList.add('active');
+            
+            // 3. 获取所有记录项
+            const records = document.querySelectorAll('.record-item');
+            
+            // 4. 根据选项卡类型筛选记录
+            records.forEach(record => {
+                if (tabType === 'all') {
+                    record.style.display = 'flex';
+                } else {
+                    // 检查记录的类型是否匹配
+                    if (record.getAttribute('data-type') === tabType) {
+                        record.style.display = 'flex';
+                    } else {
+                        record.style.display = 'none';
+                    }
+                }
+            });
+        }
+        
+        // 初始化显示全部记录
+        document.addEventListener('DOMContentLoaded', function() {
+            // 确保默认显示全部
+            switchTab('all', document.querySelector('.tab.active'));
+        });
+    </script>
+</body>
+</html>
 
 <div class="container">
     <!-- 顶部资产卡片 -->
