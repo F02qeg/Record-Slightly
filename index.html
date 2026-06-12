@@ -77,6 +77,39 @@
         .radio-option { flex:1; text-align:center; padding:14px; border:2px solid var(--border-soft); border-radius:var(--radius-md); cursor:pointer; background:var(--bg-page); }
         .radio-option.selected { border-color:var(--primary-blue); background:#E8F1FF; color:var(--primary-blue); font-weight:700; }
 
+        /* ===== 资产选项卡样式 ===== */
+    .tabs {
+        display: flex;
+        gap: 12px;
+        margin: 20px 0;
+        padding: 0 16px;
+    }
+
+    .tab {
+        flex: 1;
+        text-align: center;
+        padding: 14px;
+        border: 2px solid var(--border-soft);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        background: var(--bg-page);
+        font-weight: 500;
+        color: var(--text-dark);
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+
+    .tab:hover {
+        background: #eef2f7;
+    }
+
+    .tab.active {
+        border-color: var(--primary-blue);
+        background: #E8F1FF;
+        color: var(--primary-blue);
+        font-weight: 700;
+    }   
+
         .btn { padding:16px; border-radius:var(--radius-md); border:none; font-weight:700; font-size:16px; cursor:pointer; }
         .btn-primary { background:var(--primary-blue); color:#fff; }
         .btn-secondary { background:var(--bg-page); color:var(--text-dark); border:2px solid var(--border-soft); }
