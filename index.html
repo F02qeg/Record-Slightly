@@ -1,123 +1,242 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <!-- ===== PWA 必须 ===== -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#5D9CEC">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="轻记">
-    <link rel="apple-touch-icon" href="icons/icon-192.png">
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>轻记 (Light Ledger)</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
+    <title>资产页面</title>
+    
+    <!-- 将样式直接写在这里，确保生效 -->
     <style>
         :root {
-            --primary-blue: #5D9CEC;
-            --accent-coral: #FF6B6B;
-            --accent-mint: #48CFAD;
-            --bg-page: #F0F4F8;
-            --bg-card: #FFFFFF;
-            --text-dark: #2C3E50;
-            --text-light: #97AAB8;
-            --border-soft: #E8EEF2;
-            --shadow-card: 0 4px 15px rgba(0,0,0,0.04);
-            --radius-lg: 20px;
-            --radius-md: 14px;
+            --primary-blue: #2979ff;
+            --bg-page: #f5f7fa;
+            --border-soft: #e0e6ed;
+            --text-dark: #333;
+            --radius-md: 8px;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-        body { background:var(--bg-page); color:var(--text-dark); font-size:15px; padding-bottom:90px; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue"; }
-        .container { max-width:480px; margin:0 auto; padding:0 16px; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            padding-top: 20px;
+        }
 
-        .header { background:var(--bg-card); padding:20px 16px 15px; position:sticky; top:0; z-index:100; box-shadow:var(--shadow-card); border-bottom-left-radius:var(--radius-lg); border-bottom-right-radius:var(--radius-lg); }
-        .header h1 { font-size:24px; font-weight:700; }
-        .header-icons { position:absolute; right:16px; top:22px; }
-        .header-icons i { font-size:18px; color:var(--text-light); margin-left:20px; }
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 0 16px;
+        }
 
-        .card { background:var(--bg-card); border-radius:var(--radius-lg); padding:20px; margin-top:20px; box-shadow:var(--shadow-card); border:1px solid var(--border-soft); }
+        /* 顶部资产卡片 */
+        .asset-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+        }
+        
+        /* 修复数字过长的问题 */
+        .asset-card .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 10px;
+            word-break: break-all; /* 防止数字撑破布局 */
+        }
 
-        .budget-card { background:var(--bg-card); padding:20px; border-radius:var(--radius-lg); margin-top:20px; box-shadow:var(--shadow-card); border:1px solid var(--border-soft); }
-        .budget-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
-        .budget-bar-container { background:var(--bg-page); border-radius:10px; height:10px; overflow:hidden; margin:15px 0; }
-        .budget-bar { height:100%; border-radius:10px; transition:.5s; }
-        .budget-safe { background:var(--accent-mint); }
-        .budget-warning { background:#FFC107; }
-        .budget-danger { background:var(--accent-coral); }
-        .budget-numbers { display:flex; justify-content:space-between; font-size:14px; font-weight:500; }
+        .asset-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
 
-        .summary-card { background:linear-gradient(135deg,var(--primary-blue),#7AAFFF); color:#fff; text-align:center; padding:30px 20px; }
-        .summary-card .amount { font-size:42px; font-weight:800; margin:10px 0; }
-        .summary-card .details { display:flex; justify-content:space-around; margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,.2); }
+        /* --- 核心修改：选项卡按钮样式 --- */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 0 4px;
+        }
 
-        .alert-card { display:flex; align-items:center; padding:16px; border-radius:var(--radius-md); margin-top:15px; }
-        .alert-warning { background:#FFF9E6; color:#D4A500; border-left:5px solid #FFC107; }
-        .alert-danger { background:#FFF5F5; color:var(--accent-coral); border-left:5px solid var(--accent-coral); }
+        .tab-btn {
+            flex: 1;
+            text-align: center;
+            padding: 12px 8px;
+            border: 1px solid var(--border-soft);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            background: white;
+            font-size: 14px;
+            color: #666;
+            transition: all 0.2s;
+            font-weight: 500;
+            /* 确保这是一个块级可点击区域 */
+            display: block; 
+            border: 2px solid transparent; /* 预留边框位置 */
+        }
 
-        .transaction-item { display:flex; align-items:center; padding:16px 0; border-bottom:1px solid var(--border-soft); }
-        .transaction-icon { width:48px; height:48px; border-radius:50%; background:var(--bg-page); display:flex; align-items:center; justify-content:center; font-size:22px; margin-right:15px; }
-        .tag-business { background:#E8F1FF; color:var(--primary-blue); padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold; margin-left:8px; }
+        /* 鼠标放上去有效果 */
+        .tab-btn:hover {
+            background: #f0f4f8;
+            border-color: #ccc;
+        }
 
-        .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:var(--bg-card); display:flex; justify-content:space-around; padding:12px 0; border-top:1px solid var(--border-soft); height:70px; z-index:100; }
-        .nav-item { text-align:center; color:var(--text-light); font-size:12px; cursor:pointer; }
-        .nav-item.active { color:var(--primary-blue); transform:translateY(-5px); }
-        .nav-item i { font-size:24px; margin-bottom:4px; }
+        /* 选中状态的高亮样式 */
+        .tab-btn.active {
+            border-color: var(--primary-blue);
+            background: #E8F1FF;
+            color: var(--primary-blue);
+            font-weight: bold;
+        }
 
-        .fab { position:fixed; bottom:85px; right:20px; width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--primary-blue),#7AAFFF); color:#fff; display:flex; align-items:center; justify-content:center; font-size:32px; box-shadow:0 6px 20px rgba(93,156,236,.4); cursor:pointer; z-index:50; }
+        /* 账目列表 */
+        .list-container {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 0 16px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 80px; /* 给底部导航留空间 */
+            min-height: 200px; /* 防止列表为空时页面塌陷 */
+        }
 
-        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(3px); display:none; align-items:flex-end; justify-content:center; z-index:200; }
-        .modal-content { background:#fff; border-radius:var(--radius-lg) var(--radius-lg) 0 0; width:100%; max-width:480px; max-height:85vh; overflow-y:auto; animation:slideUp .3s; padding:25px; }
-        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+        .list-header {
+            padding: 16px 0;
+            font-size: 12px;
+            color: #999;
+            border-bottom: 1px solid #eee;
+        }
 
-        .form-group { margin-bottom:20px; }
-        .form-control { width:100%; padding:16px; border:2px solid var(--border-soft); border-radius:var(--radius-md); font-size:16px; background:var(--bg-page); }
-        .radio-group { display:flex; gap:12px; }
-        .radio-option { flex:1; text-align:center; padding:14px; border:2px solid var(--border-soft); border-radius:var(--radius-md); cursor:pointer; background:var(--bg-page); }
-        .radio-option.selected { border-color:var(--primary-blue); background:#E8F1FF; color:var(--primary-blue); font-weight:700; }
+        .record-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
 
-        /* ===== 资产选项卡样式 ===== */
-    .tabs {
-        display: flex;
-        gap: 12px;
-        margin: 20px 0;
-        padding: 0 16px;
-    }
+        .record-info {
+            font-size: 15px;
+        }
 
-    .tab {
-        flex: 1;
-        text-align: center;
-        padding: 14px;
-        border: 2px solid var(--border-soft);
-        border-radius: var(--radius-md);
-        cursor: pointer;
-        background: var(--bg-page);
-        font-weight: 500;
-        color: var(--text-dark);
-        transition: all 0.2s ease;
-        user-select: none;
-    }
+        .record-amount {
+            font-weight: 500;
+            color: #333;
+        }
 
-    .tab:hover {
-        background: #eef2f7;
-    }
-
-    .tab.active {
-        border-color: var(--primary-blue);
-        background: #E8F1FF;
-        color: var(--primary-blue);
-        font-weight: 700;
-    }   
-
-        .btn { padding:16px; border-radius:var(--radius-md); border:none; font-weight:700; font-size:16px; cursor:pointer; }
-        .btn-primary { background:var(--primary-blue); color:#fff; }
-        .btn-secondary { background:var(--bg-page); color:var(--text-dark); border:2px solid var(--border-soft); }
-        .btn-danger { background:var(--accent-coral); color:#fff; }
-
-        .hidden { display:none !important; }
+        /* 底部导航模拟 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 500px;
+            height: 60px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 </head>
+<body>
+
+<div class="container">
+    <!-- 顶部资产卡片 -->
+    <div class="asset-card">
+        <div class="amount">¥ 28.700000000000003</div>
+        <div class="asset-item">
+            <span>总资产</span>
+            <span>¥ 0</span>
+        </div>
+        <div class="asset-item">
+            <span>待报销</span>
+            <span>4</span>
+        </div>
+        <div class="asset-item">
+            <span>即将过保</span>
+            <span></span>
+        </div>
+    </div>
+
+    <!-- === 核心修改：选项卡区域 === -->
+    <div class="tabs">
+        <!-- 注意：我给每个按钮加了 onclick 属性，确保点击一定会有反应 -->
+        <button class="tab-btn active" onclick="switchTab('all', this)">全部</button>
+        <button class="tab-btn" onclick="switchTab('personal', this)">个人</button>
+        <button class="tab-btn" onclick="switchTab('business', this)">商务</button>
+        <button class="tab-btn" onclick="switchTab('gift', this)">礼物</button>
+    </div>
+
+    <!-- 账目列表 -->
+    <div class="list-container">
+        <div class="list-header">账单记录</div>
+        
+        <!-- 示例数据 -->
+        <div class="record-item" data-type="personal">
+            <div class="record-info">午餐（汤+鱼+馒头+蔬菜）</div>
+            <div class="record-amount">¥11.30</div>
+        </div>
+        
+        <div class="record-item" data-type="personal">
+            <div class="record-info">打印</div>
+            <div class="record-amount">¥0.40</div>
+        </div>
+
+        <div class="record-item" data-type="business">
+            <div class="record-info">晚餐（鸭脖+菜煎饼）</div>
+            <div class="record-amount">¥12.00</div>
+        </div>
+
+        <div class="record-item" data-type="personal">
+            <div class="record-info">蟠桃</div>
+            <div class="record-amount">¥5.00</div>
+        </div>
+    </div>
+</div>
+
+<!-- 底部导航占位 -->
+<div class="bottom-nav">
+    <div style="color: #2979ff; font-weight: bold;">💰 资产</div>
+</div>
+
+<script>
+    // 切换选项卡的逻辑
+    function switchTab(type, element) {
+        // 1. 移除所有按钮的 active 样式
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach(btn => btn.classList.remove('active'));
+        
+        // 2. 给当前点击的按钮加上 active 样式
+        element.classList.add('active');
+        
+        // 3. 筛选列表
+        const records = document.querySelectorAll('.record-item');
+        records.forEach(record => {
+            if (type === 'all') {
+                record.style.display = 'flex';
+            } else {
+                // 这里的逻辑是：如果记录的 data-type 和选中的类型一致则显示，否则隐藏
+                if (record.dataset.type === type) {
+                    record.style.display = 'flex';
+                } else {
+                    record.style.display = 'none';
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
 
 <body>
 
