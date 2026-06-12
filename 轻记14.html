@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <!-- ===== PWA 必须 ===== -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#5D9CEC">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="轻记">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>轻记 (Light Ledger)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #5D9CEC;
+            --accent-coral: #FF6B6B;
+            --accent-mint: #48CFAD;
+            --bg-page: #F0F4F8;
+            --bg-card: #FFFFFF;
+            --text-dark: #2C3E50;
+            --text-light: #97AAB8;
+            --border-soft: #E8EEF2;
+            --shadow-card: 0 4px 15px rgba(0,0,0,0.04);
+            --radius-lg: 20px;
+            --radius-md: 14px;
+        }
+
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        body { background:var(--bg-page); color:var(--text-dark); font-size:15px; padding-bottom:90px; font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue"; }
+        .container { max-width:480px; margin:0 auto; padding:0 16px; }
+
+        .header { background:var(--bg-card); padding:20px 16px 15px; position:sticky; top:0; z-index:100; box-shadow:var(--shadow-card); border-bottom-left-radius:var(--radius-lg); border-bottom-right-radius:var(--radius-lg); }
+        .header h1 { font-size:24px; font-weight:700; }
+        .header-icons { position:absolute; right:16px; top:22px; }
+        .header-icons i { font-size:18px; color:var(--text-light); margin-left:20px; }
+
+        .card { background:var(--bg-card); border-radius:var(--radius-lg); padding:20px; margin-top:20px; box-shadow:var(--shadow-card); border:1px solid var(--border-soft); }
+
+        .budget-card { background:var(--bg-card); padding:20px; border-radius:var(--radius-lg); margin-top:20px; box-shadow:var(--shadow-card); border:1px solid var(--border-soft); }
+        .budget-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
+        .budget-bar-container { background:var(--bg-page); border-radius:10px; height:10px; overflow:hidden; margin:15px 0; }
+        .budget-bar { height:100%; border-radius:10px; transition:.5s; }
+        .budget-safe { background:var(--accent-mint); }
+        .budget-warning { background:#FFC107; }
+        .budget-danger { background:var(--accent-coral); }
+        .budget-numbers { display:flex; justify-content:space-between; font-size:14px; font-weight:500; }
+
+        .summary-card { background:linear-gradient(135deg,var(--primary-blue),#7AAFFF); color:#fff; text-align:center; padding:30px 20px; }
+        .summary-card .amount { font-size:42px; font-weight:800; margin:10px 0; }
+        .summary-card .details { display:flex; justify-content:space-around; margin-top:20px; padding-top:20px; border-top:1px solid rgba(255,255,255,.2); }
+
+        .alert-card { display:flex; align-items:center; padding:16px; border-radius:var(--radius-md); margin-top:15px; }
+        .alert-warning { background:#FFF9E6; color:#D4A500; border-left:5px solid #FFC107; }
+        .alert-danger { background:#FFF5F5; color:var(--accent-coral); border-left:5px solid var(--accent-coral); }
+
+        .transaction-item { display:flex; align-items:center; padding:16px 0; border-bottom:1px solid var(--border-soft); }
+        .transaction-icon { width:48px; height:48px; border-radius:50%; background:var(--bg-page); display:flex; align-items:center; justify-content:center; font-size:22px; margin-right:15px; }
+        .tag-business { background:#E8F1FF; color:var(--primary-blue); padding:3px 8px; border-radius:6px; font-size:11px; font-weight:bold; margin-left:8px; }
+
+        .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:var(--bg-card); display:flex; justify-content:space-around; padding:12px 0; border-top:1px solid var(--border-soft); height:70px; z-index:100; }
+        .nav-item { text-align:center; color:var(--text-light); font-size:12px; cursor:pointer; }
+        .nav-item.active { color:var(--primary-blue); transform:translateY(-5px); }
+        .nav-item i { font-size:24px; margin-bottom:4px; }
+
+        .fab { position:fixed; bottom:85px; right:20px; width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,var(--primary-blue),#7AAFFF); color:#fff; display:flex; align-items:center; justify-content:center; font-size:32px; box-shadow:0 6px 20px rgba(93,156,236,.4); cursor:pointer; z-index:50; }
+
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); backdrop-filter:blur(3px); display:none; align-items:flex-end; justify-content:center; z-index:200; }
+        .modal-content { background:#fff; border-radius:var(--radius-lg) var(--radius-lg) 0 0; width:100%; max-width:480px; max-height:85vh; overflow-y:auto; animation:slideUp .3s; padding:25px; }
+        @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+        .form-group { margin-bottom:20px; }
+        .form-control { width:100%; padding:16px; border:2px solid var(--border-soft); border-radius:var(--radius-md); font-size:16px; background:var(--bg-page); }
+        .radio-group { display:flex; gap:12px; }
+        .radio-option { flex:1; text-align:center; padding:14px; border:2px solid var(--border-soft); border-radius:var(--radius-md); cursor:pointer; background:var(--bg-page); }
+        .radio-option.selected { border-color:var(--primary-blue); background:#E8F1FF; color:var(--primary-blue); font-weight:700; }
+
+        .btn { padding:16px; border-radius:var(--radius-md); border:none; font-weight:700; font-size:16px; cursor:pointer; }
+        .btn-primary { background:var(--primary-blue); color:#fff; }
+        .btn-secondary { background:var(--bg-page); color:var(--text-dark); border:2px solid var(--border-soft); }
+        .btn-danger { background:var(--accent-coral); color:#fff; }
+
+        .hidden { display:none !important; }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>轻记</h1>
+    <div class="header-icons">
+        <i class="fas fa-bell"></i>
+        <i class="fas fa-magnifying-glass"></i>
+    </div>
+</div>
+
+<div class="container">
+    <div id="home-tab">
+        <div class="budget-card">
+            <div class="budget-header">
+                <h3>本月预算</h3>
+                <i class="fas fa-pen-to-square" onclick="openBudgetModal()"></i>
+            </div>
+            <div class="budget-bar-container">
+                <div class="budget-bar" id="budget-bar"></div>
+            </div>
+            <div class="budget-numbers">
+                <span>已花: ¥<span id="budget-spent">0</span></span>
+                <span id="budget-remaining-text">剩余: ¥<span id="budget-remaining">0</span></span>
+            </div>
+        </div>
+
+        <div class="card summary-card">
+            <div class="label">今日总支出</div>
+            <div class="amount" id="today-expense">¥ 0.00</div>
+            <div class="details">
+                <span>本月累计: <strong id="month-expense">¥ 0.00</strong></span>
+                <span>距月底: <strong id="days-left">0</strong> 天</span>
+            </div>
+        </div>
+
+        <div id="pending-asset-alert" class="alert-card alert-warning hidden">
+            <i class="fas fa-box"></i>
+            <div>📦 1个包裹正在路上</div>
+        </div>
+
+        <div id="warranty-alert" class="alert-card alert-danger hidden">
+            <i class="fas fa-exclamation-triangle"></i>
+            <div id="warranty-text">⚠️ 质保提醒</div>
+        </div>
+
+        <div class="section-title">最近记录</div>
+        <div class="card" id="transactions-list"></div>
+    </div>
+
+    <div id="assets-tab" class="hidden">
+        <div class="card asset-stats">
+            <div><strong id="total-assets">¥ 0</strong><div>总资产</div></div>
+            <div><strong id="pending-reimburse">¥ 0</strong><div>待报销</div></div>
+            <div><strong id="expiring-soon">0</strong><div>即将过保</div></div>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" data-filter="all">全部</div>
+            <div class="tab" data-filter="personal">个人</div>
+            <div class="tab" data-filter="business">商务</div>
+            <div class="tab" data-filter="gift">礼物</div>
+        </div>
+
+        <div id="assets-list"></div>
+    </div>
+
+    <div id="profile-tab" class="hidden">
+        <div class="card">
+            <h3>数据与隐私</h3>
+            <p>所有数据均存储在您的手机本地。</p>
+            <button class="btn btn-primary" onclick="exportToCSV()">导出商务报销单</button>
+            <button class="btn btn-secondary" onclick="addMockTransaction()">模拟一笔消费</button>
+            <button class="btn btn-danger" onclick="clearAllData()">清除所有数据</button>
+        </div>
+    </div>
+</div>
+
+<div class="fab" onclick="openAddAssetModal()">+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="budget-modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>设置预算</h3><i class="fas fa-times" onclick="closeModal('budget-modal')"></i></div>
+        <div class="modal-body">
+            <input type="number" class="form-control" id="budget-input" placeholder="例如：5000">
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('budget-modal')">取消</button>
+            <button class="btn btn-primary" onclick="saveBudget()">保存</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="add-asset-modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3>添加资产</h3><i class="fas fa-times" onclick="closeModal('add-asset-modal')"></i></div>
+        <div class="modal-body">
+            <div class="form-group"><label>物品名称</label><input class="form-control" id="asset-name"></div>
+            <div class="form-group"><label>估值 (¥)</label><input type="number" class="form-control" id="asset-value"></div>
+            <div class="form-group">
+                <label>用途</label>
+                <div class="radio-group">
+                    <div class="radio-option selected" data-value="personal">个人</div>
+                    <div class="radio-option" data-value="business">商务</div>
+                    <div class="radio-option" data-value="gift">礼物</div>
+                </div>
+                <input type="hidden" id="asset-purpose" value="personal">
+            </div>
+            <div class="form-group">
+                <label>质保到期日</label>
+                <input type="date" class="form-control" id="asset-warranty">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeModal('add-asset-modal')">取消</button>
+            <button class="btn btn-primary" onclick="saveAsset()">保存资产</button>
+        </div>
+    </div>
+</div>
+
+<div class="bottom-nav">
+    <div class="nav-item active" data-tab="home-tab"><i class="fas fa-house"></i>首页</div>
+    <div class="nav-item" data-tab="assets-tab"><i class="fas fa-box-open"></i>资产</div>
+    <div class="nav-item" data-tab="profile-tab"><i class="fas fa-user"></i>我的</div>
+</div>
+
+<script>
+/* ===== DATA ===== */
+const DB = {
+    get(k){ return JSON.parse(localStorage.getItem(k)) || [] },
+    set(k,v){ localStorage.setItem(k, JSON.stringify(v)) },
+    getBudget(){ return Number(localStorage.getItem('budget')) || 0 },
+    saveBudget(v){ localStorage.setItem('budget', v) }
+};
+
+let state = {
+    transactions: DB.get('transactions'),
+    assets: DB.get('assets'),
+    budget: DB.getBudget()
+};
+
+/* ===== INIT ===== */
+document.addEventListener('DOMContentLoaded', () => {
+    setupEventListeners();
+    renderAll();
+    checkWarrantyAlerts();
+
+    // ===== PWA 注册（关键）=====
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').then(reg => {
+            if (reg.waiting) {
+                if (confirm('发现新版本，是否刷新？')) {
+                    reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    location.reload();
+                }
+            }
+            reg.addEventListener('updatefound', () => {
+                reg.installing && reg.installing.addEventListener('statechange', e => {
+                    if (e.target.state === 'installed' && navigator.serviceWorker.controller) {
+                        console.log('新版本已就绪（下次刷新生效）');
+                    }
+                });
+            });
+        }).catch(console.warn);
+    }
+});
+
+/* ===== EVENTS ===== */
+function setupEventListeners(){
+    document.querySelectorAll('.nav-item').forEach(i =>
+        i.addEventListener('click', () => switchTab(i.dataset.tab))
+    );
+
+    document.querySelectorAll('.radio-option').forEach(o =>
+        o.addEventListener('click', () => {
+            o.parentElement.querySelectorAll('.radio-option').forEach(x=>x.classList.remove('selected'));
+            o.classList.add('selected');
+            document.getElementById('asset-purpose').value = o.dataset.value;
+        })
+    );
+
+    document.querySelectorAll('.tab').forEach(t =>
+        t.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+            t.classList.add('active');
+            filterAssets(t.dataset.filter);
+        })
+    );
+}
+
+/* ===== RENDER ===== */
+function renderAll(){
+    renderHome();
+    renderAssets();
+}
+
+function renderHome(){
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+
+    const todayExp = state.transactions
+        .filter(t => t.timestamp.startsWith(today))
+        .reduce((s,t)=>s+Number(t.amount),0);
+
+    const monthExp = state.transactions
+        .filter(t => new Date(t.timestamp).getMonth() === now.getMonth())
+        .reduce((s,t)=>s+Number(t.amount),0);
+
+    document.getElementById('today-expense').textContent = `¥ ${todayExp.toFixed(2)}`;
+    document.getElementById('month-expense').textContent = `¥ ${monthExp.toFixed(2)}`;
+    document.getElementById('days-left').textContent = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate() - now.getDate();
+
+    renderBudget(monthExp);
+
+    const list = document.getElementById('transactions-list');
+    list.innerHTML = '';
+    [...state.transactions].reverse().slice(0,5).forEach(t=>{
+        list.innerHTML += `
+        <div class="transaction-item">
+            <div class="transaction-icon">📦</div>
+            <div>
+                <div>${t.merchant}</div>
+                <div style="font-size:13px;color:var(--text-light)">${new Date(t.timestamp).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+            </div>
+            <div style="margin-left:auto;font-weight:700">-¥${Number(t.amount).toFixed(2)}</div>
+        </div>`;
+    });
+}
+
+function renderBudget(spent){
+    const b = state.budget;
+    const bar = document.getElementById('budget-bar');
+    const pct = b>0 ? Math.min(spent/b*100,100) : 0;
+    bar.style.width = pct+'%';
+    bar.className = 'budget-bar '+(pct>80?'budget-danger':'budget-safe');
+    document.getElementById('budget-spent').textContent = spent;
+    document.getElementById('budget-remaining').textContent = Math.max(b-spent,0);
+}
+
+function renderAssets(filter='all'){
+    const list = document.getElementById('assets-list');
+    list.innerHTML = '';
+    let total=0, biz=0, warn=0;
+    const today = new Date();
+
+    state.assets
+        .filter(a=>filter==='all'||a.purpose===filter)
+        .forEach(a=>{
+            if(a.purpose!=='gift') total+=Number(a.current_value);
+            if(a.purpose==='business') biz+=Number(a.current_value);
+            if(a.warranty_end_date){
+                const d = new Date(a.warranty_end_date);
+                if((d-today)/864e3<=30) warn++;
+            }
+            list.innerHTML += `<div class="transaction-item"><div>${a.name}</div><div style="margin-left:auto">¥${Number(a.current_value).toFixed(2)}</div></div>`;
+        });
+
+    document.getElementById('total-assets').textContent = `¥ ${total}`;
+    document.getElementById('pending-reimburse').textContent = `¥ ${biz}`;
+    document.getElementById('expiring-soon').textContent = warn;
+}
+
+/* ===== ACTIONS ===== */
+function switchTab(id){
+    document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+    document.querySelector(`[data-tab="${id}"]`).classList.add('active');
+    ['home-tab','assets-tab','profile-tab'].forEach(x=>document.getElementById(x).classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
+}
+
+function openAddAssetModal(){
+    document.getElementById('add-asset-modal').style.display='flex';
+    const w = document.getElementById('asset-warranty');
+    const today = new Date().toISOString().split('T')[0];
+    w.min = today;
+    w.value = today;
+}
+
+function closeModal(id){
+    document.getElementById(id).style.display='none';
+}
+
+let saving=false;
+function saveAsset(){
+    if(saving) return;
+    saving=true;
+
+    const name = document.getElementById('asset-name').value.trim();
+    const value = Number(document.getElementById('asset-value').value);
+    const purpose = document.getElementById('asset-purpose').value;
+    const warranty = document.getElementById('asset-warranty').value;
+
+    if(!name||!value||value<=0){
+        alert('请填写正确信息');
+        saving=false;
+        return;
+    }
+
+    try {
+        const asset = {
+            id: Date.now(),
+            name,
+            current_value: value,
+            purpose,
+            warranty_end_date: warranty,
+            purchase_date: new Date().toISOString().split('T')[0]
+        };
+        state.assets.push(asset);
+        DB.set('assets', state.assets);
+
+        if(purpose!=='gift'){
+            state.transactions.push({
+                id: Date.now(),
+                amount: value,
+                type: 'expense',
+                merchant: name,
+                timestamp: new Date().toISOString()
+            });
+            DB.set('transactions', state.transactions);
+        }
+
+        closeModal('add-asset-modal');
+        renderAll();
+        checkWarrantyAlerts();
+    } catch(e){
+        alert('保存失败');
+    } finally {
+        saving=false;
+    }
+}
+
+function saveBudget(){
+    const v = Number(document.getElementById('budget-input').value);
+    if(v<=0) return alert('请输入有效预算');
+    state.budget = v;
+    DB.saveBudget(v);
+    closeModal('budget-modal');
+    renderHome();
+}
+
+function checkWarrantyAlerts(){
+    const today = new Date();
+    const soon = state.assets.find(a=>{
+        if(!a.warranty_end_date) return false;
+        return (new Date(a.warranty_end_date)-today)/864e3 <=7;
+    });
+    document.getElementById('warranty-alert').classList.toggle('hidden',!soon);
+}
+
+function exportToCSV(){
+    let csv='名称,估值,用途\n';
+    state.assets.filter(a=>a.purpose==='business').forEach(a=>{
+        csv+=`${a.name},${a.current_value},${a.purpose}\n`;
+    });
+    const blob=new Blob(['\ufeff'+csv],{type:'text/csv'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='报销单.csv';
+    a.click();
+}
+
+function clearAllData(){
+    if(confirm('确定清除所有数据？')){
+        localStorage.clear();
+        location.reload();
+    }
+}
+
+function addMockTransaction(){
+    state.transactions.push({
+        id: Date.now(),
+        amount: Math.floor(Math.random()*200)+20,
+        type: 'expense',
+        merchant: '星巴克',
+        timestamp: new Date().toISOString()
+    });
+    DB.set('transactions', state.transactions);
+    renderHome();
+}
+</script>
+
+</body>
+</html>
